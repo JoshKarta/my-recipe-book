@@ -160,12 +160,17 @@ export default function RecipeBookPage() {
               </Empty>
             ) : (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredRecipes.map((recipe) => (
-                  <RecipeCard
+                {filteredRecipes.map((recipe, index) => (
+                  <div
                     key={recipe.id}
-                    recipe={recipe}
-                    onClick={() => handleRecipeClick(recipe)}
-                  />
+                    className="animate-fade-in opacity-0"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <RecipeCard
+                      recipe={recipe}
+                      onClick={() => handleRecipeClick(recipe)}
+                    />
+                  </div>
                 ))}
               </div>
             )}

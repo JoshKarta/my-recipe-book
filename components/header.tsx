@@ -24,9 +24,9 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
             <button
               onClick={() => onTabChange('recipes')}
               className={cn(
-                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ease-out',
                 activeTab === 'recipes'
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
               )}
             >
@@ -36,9 +36,9 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
             <button
               onClick={() => onTabChange('planner')}
               className={cn(
-                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ease-out',
                 activeTab === 'planner'
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
               )}
             >

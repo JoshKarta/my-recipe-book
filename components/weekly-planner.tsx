@@ -118,6 +118,7 @@ export function WeeklyPlanner({ recipes, onViewRecipe }: WeeklyPlannerProps) {
             variant="outline"
             size="icon"
             onClick={() => setWeekOffset((prev) => prev - 1)}
+            className="transition-transform duration-150 active:scale-95"
           >
             <ChevronLeftIcon />
           </Button>
@@ -125,6 +126,7 @@ export function WeeklyPlanner({ recipes, onViewRecipe }: WeeklyPlannerProps) {
             variant="outline"
             size="icon"
             onClick={() => setWeekOffset((prev) => prev + 1)}
+            className="transition-transform duration-150 active:scale-95"
           >
             <ChevronRightIcon />
           </Button>
@@ -146,7 +148,8 @@ export function WeeklyPlanner({ recipes, onViewRecipe }: WeeklyPlannerProps) {
           return (
             <Card
               key={dateKey}
-              className={isToday ? 'ring-2 ring-primary' : ''}
+              className={`animate-fade-in opacity-0 transition-shadow duration-200 hover:shadow-md ${isToday ? 'ring-2 ring-primary' : ''}`}
+              style={{ animationDelay: `${index * 0.05}s` }}
             >
               <CardContent className="flex flex-col gap-3 p-3">
                 <div className="text-center">
@@ -175,13 +178,13 @@ export function WeeklyPlanner({ recipes, onViewRecipe }: WeeklyPlannerProps) {
                           <div className="group relative">
                             <button
                               onClick={() => onViewRecipe(recipe)}
-                              className="w-full rounded-md bg-secondary p-2 text-left text-xs font-medium transition-colors hover:bg-secondary/80"
+                              className="w-full rounded-md bg-secondary p-2 text-left text-xs font-medium transition-all duration-200 hover:bg-secondary/80 hover:shadow-sm"
                             >
                               <span className="line-clamp-2">{recipe.title}</span>
                             </button>
                             <button
                               onClick={() => handleRemoveMeal(dateKey, type)}
-                              className="absolute -top-1 -right-1 hidden size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground group-hover:flex"
+                              className="absolute -top-1 -right-1 hidden size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground transition-transform duration-150 hover:scale-110 group-hover:flex"
                             >
                               <XIcon className="size-3 text-white" />
                             </button>
@@ -191,7 +194,7 @@ export function WeeklyPlanner({ recipes, onViewRecipe }: WeeklyPlannerProps) {
                             onClick={() =>
                               setSelectingSlot({ date: dateKey, mealType: type })
                             }
-                            className="w-full rounded-md border border-dashed p-2 text-xs text-muted-foreground transition-colors hover:border-primary hover:bg-secondary/50"
+                            className="w-full rounded-md border border-dashed p-2 text-xs text-muted-foreground transition-all duration-200 hover:border-primary hover:bg-secondary/50 hover:shadow-sm"
                           >
                             + Add
                           </button>
@@ -237,7 +240,7 @@ export function WeeklyPlanner({ recipes, onViewRecipe }: WeeklyPlannerProps) {
                   <button
                     key={recipe.id}
                     onClick={() => handleSelectRecipe(recipe.id)}
-                    className="flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-secondary"
+                    className="flex items-center gap-3 rounded-lg border p-3 text-left transition-all duration-200 hover:bg-secondary hover:shadow-sm hover:-translate-y-0.5"
                   >
                     {recipe.image ? (
                       <img

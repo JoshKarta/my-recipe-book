@@ -13,7 +13,7 @@ interface RecipeCardProps {
 export function RecipeCard({ recipe, onClick }: RecipeCardProps) {
   return (
     <Card
-      className="cursor-pointer overflow-hidden transition-shadow hover:shadow-md pt-0"
+      className="cursor-pointer overflow-hidden pt-0 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg"
       onClick={onClick}
     >
       <div className="relative aspect-4/3 w-full overflow-hidden bg-muted">
@@ -21,7 +21,7 @@ export function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           <img
             src={recipe.image}
             alt={recipe.title}
-            className="size-full object-cover"
+            className="size-full object-cover transition-transform duration-300 ease-out hover:scale-105"
           />
         ) : (
           <div className="flex size-full items-center justify-center">

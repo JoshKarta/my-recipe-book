@@ -31,14 +31,15 @@ export function StarRating({
           disabled={readonly}
           onClick={() => onChange?.(star)}
           className={cn(
-            'transition-colors',
-            readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110'
+            'transition-all duration-200 ease-out',
+            readonly ? 'cursor-default' : 'cursor-pointer hover:scale-125 active:scale-110'
           )}
           aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
         >
           <StarIcon
             className={cn(
               sizeClasses[size],
+              'transition-colors duration-200',
               star <= rating
                 ? 'fill-accent text-accent'
                 : 'fill-transparent text-muted-foreground/40'
