@@ -243,14 +243,14 @@ export function WeeklyPlanner({ recipes, onViewRecipe }: WeeklyPlannerProps) {
                       <img
                         src={recipe.image}
                         alt={recipe.title}
-                        className="size-12 rounded-md object-cover"
+                        className="size-12 shrink-0 rounded-md object-cover"
                       />
                     ) : (
-                      <div className="flex size-12 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                      <div className="flex size-12 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                         <CalendarIcon className="size-5" />
                       </div>
                     )}
-                    <div className="flex-wrap overflow-hidden">
+                    <div className="min-w-0 flex-1">
                       <div className="truncate font-medium">{recipe.title}</div>
                       <div className="truncate text-sm text-muted-foreground">
                         {recipe.cookingTime && `${recipe.cookingTime} min`}
