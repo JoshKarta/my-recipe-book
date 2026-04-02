@@ -20,7 +20,7 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
             <ChefHatIcon className="size-7 text-primary" />
             <h1 className="text-xl font-semibold">My Recipe Book</h1>
           </div>
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-2">
             <button
               onClick={() => onTabChange('recipes')}
               className={cn(
