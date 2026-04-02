@@ -5,7 +5,6 @@ import { BookOpenIcon, SearchIcon } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -23,15 +22,11 @@ import { RecipeCard } from '@/components/recipe-card'
 import { RecipeForm } from '@/components/recipe-form'
 import { RecipeDetail } from '@/components/recipe-detail'
 import { useRecipes } from '@/hooks/use-recipes'
-import { MemoryGame } from '@/components/game/memory-game'
 import type { Recipe, RecipeFormData } from '@/lib/types'
-
-type Tab = 'recipes' | 'game'
 
 export default function RecipeBookPage() {
   const { recipes, isLoaded, addRecipe, updateRecipe, deleteRecipe } =
     useRecipes()
-  const [activeTab, setActiveTab] = useState<Tab>('recipes')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -92,13 +87,9 @@ export default function RecipeBookPage() {
   if (!isLoaded) {
     return (
       <div className="flex min-h-screen flex-col">
-        <Header
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          onAddRecipe={() => setIsAddDialogOpen(true)}
-        />
+        <Header onAddRecipe={() => setIsAddDialogOpen(true)} />
         <main className="flex flex-1 items-center justify-center">
-          <div className="text-muted-foreground">Loading...</div>
+          <div className="text-muted-foreground">Loading recipes...</div>
         </main>
       </div>
     )
@@ -106,72 +97,62 @@ export default function RecipeBookPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onAddRecipe={() => setIsAddDialogOpen(true)}
-      />
+      <Header onAddRecipe={() => setIsAddDialogOpen(true)} />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-        {activeTab === 'recipes' ? (
-          <>
-            {recipes.length > 0 && (
-              <div className="relative mb-6">
-                <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search recipes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            )}
+        {recipes.length > 0 && (
+          <div className="relative mb-6">
+            <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search recipes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        )}
 
-            {recipes.length === 0 ? (
-              <Empty className="border">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <BookOpenIcon />
-                  </EmptyMedia>
-                  <EmptyTitle>No recipes yet</EmptyTitle>
-                  <EmptyDescription>
-                    Start building your recipe collection by adding your first
-                    recipe.
-                  </EmptyDescription>
-                </EmptyHeader>
-                <Button onClick={() => setIsAddDialogOpen(true)}>
-                  Add Your First Recipe
-                </Button>
-              </Empty>
-            ) : filteredRecipes.length === 0 ? (
-              <Empty className="border">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <SearchIcon />
-                  </EmptyMedia>
-                  <EmptyTitle>No recipes found</EmptyTitle>
-                  <EmptyDescription>
-                    Try adjusting your search to find what you&apos;re looking for.
-                  </EmptyDescription>
-                </EmptyHeader>
-                <Button variant="outline" onClick={() => setSearchQuery('')}>
-                  Clear Search
-                </Button>
-              </Empty>
-            ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onClick={() => handleRecipeClick(recipe)}
-                  />
-                ))}
-              </div>
-            )}
-          </>
+        {recipes.length === 0 ? (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <BookOpenIcon />
+              </EmptyMedia>
+              <EmptyTitle>No recipes yet</EmptyTitle>
+              <EmptyDescription>
+                Start building your recipe collection by adding your first
+                recipe.
+              </EmptyDescription>
+            </EmptyHeader>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              Add Your First Recipe
+            </Button>
+          </Empty>
+        ) : filteredRecipes.length === 0 ? (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <SearchIcon />
+              </EmptyMedia>
+              <EmptyTitle>No recipes found</EmptyTitle>
+              <EmptyDescription>
+                Try adjusting your search to find what you&apos;re looking for.
+              </EmptyDescription>
+            </EmptyHeader>
+            <Button variant="outline" onClick={() => setSearchQuery('')}>
+              Clear Search
+            </Button>
+          </Empty>
         ) : (
-          <MemoryGame />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredRecipes.map((recipe) => (
+              <RecipeCard
+                key={recipe.id}
+                recipe={recipe}
+                onClick={() => handleRecipeClick(recipe)}
+              />
+            ))}
+          </div>
         )}
       </main>
 
@@ -180,9 +161,6 @@ export default function RecipeBookPage() {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Add New Recipe</DialogTitle>
-            <DialogDescription>
-              Fill in the details below to add a new recipe to your collection.
-            </DialogDescription>
           </DialogHeader>
           <RecipeForm
             onSubmit={handleAddRecipe}
@@ -196,9 +174,6 @@ export default function RecipeBookPage() {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit Recipe</DialogTitle>
-            <DialogDescription>
-              Update the recipe details below.
-            </DialogDescription>
           </DialogHeader>
           {selectedRecipe && (
             <RecipeForm
@@ -215,9 +190,6 @@ export default function RecipeBookPage() {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="sr-only">Recipe Details</DialogTitle>
-            <DialogDescription className="sr-only">
-              View and manage recipe details, rating, and photo.
-            </DialogDescription>
           </DialogHeader>
           {selectedRecipe && (
             <RecipeDetail
