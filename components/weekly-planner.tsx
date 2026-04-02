@@ -138,7 +138,7 @@ export function WeeklyPlanner({ recipes, onViewRecipe }: WeeklyPlannerProps) {
       </div>
 
       {/* Weekly Grid */}
-      <div className="grid gap-4 lg:grid-cols-7">
+      <div className="grid gap-4 lg:grid-cols-4">
         {weekDates.map((date, index) => {
           const dateKey = formatDateKey(date)
           const isToday = formatDateKey(new Date()) === dateKey
