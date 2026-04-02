@@ -13,3 +13,13 @@ export interface Recipe {
 }
 
 export type RecipeFormData = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner'
+
+export interface MealPlan {
+  [date: string]: {
+    [key in MealType]?: string // recipe id
+  }
+}
+
+export type Tab = 'recipes' | 'planner'
