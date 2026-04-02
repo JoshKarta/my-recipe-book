@@ -183,7 +183,7 @@ export function WeeklyPlanner({ recipes, onViewRecipe }: WeeklyPlannerProps) {
                               onClick={() => handleRemoveMeal(dateKey, type)}
                               className="absolute -top-1 -right-1 hidden size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground group-hover:flex"
                             >
-                              <XIcon className="size-3" />
+                              <XIcon className="size-3 text-white" />
                             </button>
                           </div>
                         ) : (
