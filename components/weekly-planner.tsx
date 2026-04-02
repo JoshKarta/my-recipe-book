@@ -250,7 +250,7 @@ export function WeeklyPlanner({ recipes, onViewRecipe }: WeeklyPlannerProps) {
                         <CalendarIcon className="size-5" />
                       </div>
                     )}
-                    <div className="flex-1 overflow-hidden">
+                    <div className="flex-wrap overflow-hidden">
                       <div className="truncate font-medium">{recipe.title}</div>
                       <div className="truncate text-sm text-muted-foreground">
                         {recipe.cookingTime && `${recipe.cookingTime} min`}
