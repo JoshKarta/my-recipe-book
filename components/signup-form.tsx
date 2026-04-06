@@ -59,7 +59,7 @@ export function SignupForm({
         {
           onSuccess: () => {
             toast.success("Account created!");
-            router.push("/signin");
+            router.push("/");
           },
           onError: (ctx) => {
             toast.error(ctx.error.message);
