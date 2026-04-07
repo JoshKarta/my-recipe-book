@@ -1,5 +1,13 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  integer,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -153,6 +161,122 @@ export const notificationRelations = relations(notification, ({ one }) => ({
   }),
 }));
 
+// ─── Recipes ─────────────────────────────────────────────────────────────────
+
+export const recipe = pgTable(
+  "recipe",
+  {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    description: text("description"),
+    ingredients: text("ingredients").notNull(),
+    instructions: text("instructions").notNull(),
+    cookingTime: text("cooking_time"),
+    servings: text("servings"),
+    rating: integer("rating").default(0).notNull(),
+    createdById: text("created_by_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id").references(() => organization.id, {
+      onDelete: "cascade",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("recipe_createdById_idx").on(table.createdById),
+    index("recipe_organizationId_idx").on(table.organizationId),
+  ],
+);
+
+export const recipeImage = pgTable(
+  "recipe_image",
+  {
+    id: text("id").primaryKey(),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipe.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    order: integer("order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("recipe_image_recipeId_idx").on(table.recipeId)],
+);
+
+// ─── Meal Plans ───────────────────────────────────────────────────────────────
+
+export const mealPlan = pgTable(
+  "meal_plan",
+  {
+    id: text("id").primaryKey(),
+    date: text("date").notNull(), // YYYY-MM-DD
+    mealType: text("meal_type").notNull(), // breakfast | lunch | dinner
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipe.id, { onDelete: "cascade" }),
+    createdById: text("created_by_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id").references(() => organization.id, {
+      onDelete: "cascade",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("meal_plan_createdById_idx").on(table.createdById),
+    index("meal_plan_organizationId_idx").on(table.organizationId),
+    uniqueIndex("meal_plan_date_mealType_org_idx").on(
+      table.date,
+      table.mealType,
+      table.organizationId,
+    ),
+  ],
+);
+
+// ─── Relations ────────────────────────────────────────────────────────────────
+
+export const recipeRelations = relations(recipe, ({ one, many }) => ({
+  createdBy: one(user, {
+    fields: [recipe.createdById],
+    references: [user.id],
+  }),
+  organization: one(organization, {
+    fields: [recipe.organizationId],
+    references: [organization.id],
+  }),
+  images: many(recipeImage),
+  mealPlans: many(mealPlan),
+}));
+
+export const recipeImageRelations = relations(recipeImage, ({ one }) => ({
+  recipe: one(recipe, {
+    fields: [recipeImage.recipeId],
+    references: [recipe.id],
+  }),
+}));
+
+export const mealPlanRelations = relations(mealPlan, ({ one }) => ({
+  recipe: one(recipe, {
+    fields: [mealPlan.recipeId],
+    references: [recipe.id],
+  }),
+  createdBy: one(user, {
+    fields: [mealPlan.createdById],
+    references: [user.id],
+  }),
+  organization: one(organization, {
+    fields: [mealPlan.organizationId],
+    references: [organization.id],
+  }),
+}));
+
 export const schema = {
   user,
   session,
@@ -162,4 +286,7 @@ export const schema = {
   member,
   invitation,
   notification,
+  recipe,
+  recipeImage,
+  mealPlan,
 };

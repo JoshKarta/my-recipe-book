@@ -1,66 +1,81 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import type { MealPlan, MealType } from '@/lib/types'
-
-const STORAGE_KEY = 'recipe-book-meal-plan'
+import { useState, useEffect, useCallback } from "react";
+import type { MealPlan, MealType } from "@/lib/types";
 
 export function useMealPlan() {
-  const [mealPlan, setMealPlan] = useState<MealPlan>({})
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [mealPlan, setMealPlan] = useState<MealPlan>({});
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // Load all visible meal plans on mount
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        setMealPlan(JSON.parse(stored))
-      } catch {
-        setMealPlan({})
-      }
-    }
-    setIsLoaded(true)
-  }, [])
-
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mealPlan))
-    }
-  }, [mealPlan, isLoaded])
+    fetch("/api/meal-plans")
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((data: MealPlan) => setMealPlan(data))
+      .catch(() => setMealPlan({}))
+      .finally(() => setIsLoaded(true));
+  }, []);
 
   const setMeal = useCallback(
-    (date: string, mealType: MealType, recipeId: string | null) => {
-      setMealPlan((prev) => {
-        const dayPlan = prev[date] || {}
-        if (recipeId === null) {
-          const { [mealType]: _, ...rest } = dayPlan
-          if (Object.keys(rest).length === 0) {
-            const { [date]: __, ...remaining } = prev
-            return remaining
+    async (date: string, mealType: MealType, recipeId: string | null) => {
+      if (recipeId === null) {
+        // Optimistic update
+        setMealPlan((prev) => {
+          const dayPlan = { ...(prev[date] || {}) };
+          delete dayPlan[mealType];
+          if (Object.keys(dayPlan).length === 0) {
+            const { [date]: _, ...remaining } = prev;
+            return remaining;
           }
-          return { ...prev, [date]: rest }
-        }
-        return {
+          return { ...prev, [date]: dayPlan };
+        });
+        await fetch(
+          `/api/meal-plans?date=${encodeURIComponent(date)}&mealType=${encodeURIComponent(mealType)}`,
+          { method: "DELETE" },
+        );
+      } else {
+        // Optimistic update
+        setMealPlan((prev) => ({
           ...prev,
-          [date]: { ...dayPlan, [mealType]: recipeId },
-        }
-      })
+          [date]: { ...(prev[date] || {}), [mealType]: recipeId },
+        }));
+        await fetch("/api/meal-plans", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date, mealType, recipeId }),
+        });
+      }
     },
-    []
-  )
+    [],
+  );
 
   const getMeal = useCallback(
     (date: string, mealType: MealType): string | undefined => {
-      return mealPlan[date]?.[mealType]
+      return mealPlan[date]?.[mealType];
     },
-    [mealPlan]
-  )
+    [mealPlan],
+  );
 
-  const clearDay = useCallback((date: string) => {
-    setMealPlan((prev) => {
-      const { [date]: _, ...rest } = prev
-      return rest
-    })
-  }, [])
+  const clearDay = useCallback(
+    async (date: string) => {
+      const dayPlan = mealPlan[date];
+      if (!dayPlan) return;
+      setMealPlan((prev) => {
+        const { [date]: _, ...rest } = prev;
+        return rest;
+      });
+      // Remove each slot server-side
+      await Promise.all(
+        (Object.keys(dayPlan) as MealType[]).map((mealType) =>
+          fetch(
+            `/api/meal-plans?date=${encodeURIComponent(date)}&mealType=${encodeURIComponent(mealType)}`,
+            { method: "DELETE" },
+          ),
+        ),
+      );
+    },
+    [mealPlan],
+  );
 
-  return { mealPlan, isLoaded, setMeal, getMeal, clearDay }
+  return { mealPlan, isLoaded, setMeal, getMeal, clearDay };
 }

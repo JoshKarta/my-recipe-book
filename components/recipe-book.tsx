@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BookOpenIcon, SearchIcon } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -36,44 +37,73 @@ export default function RecipeBook() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
+  console.log(recipes);
+
   const filteredRecipes = recipes.filter(
     (recipe) =>
       recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      recipe.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      (recipe.description ?? "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()),
   );
 
-  const handleAddRecipe = (data: RecipeFormData) => {
-    addRecipe(data);
-    setIsAddDialogOpen(false);
-  };
-
-  const handleEditRecipe = (data: RecipeFormData) => {
-    if (selectedRecipe) {
-      updateRecipe(selectedRecipe.id, data);
-      setIsEditDialogOpen(false);
-      setSelectedRecipe({ ...selectedRecipe, ...data });
+  const handleAddRecipe = async (data: RecipeFormData) => {
+    try {
+      await addRecipe(data);
+      setIsAddDialogOpen(false);
+      toast.success("Recipe added successfully!");
+    } catch (error) {
+      toast.error("Failed to add recipe");
     }
   };
 
-  const handleDeleteRecipe = () => {
-    if (selectedRecipe) {
-      deleteRecipe(selectedRecipe.id);
-      setIsDetailDialogOpen(false);
-      setSelectedRecipe(null);
+  const handleEditRecipe = async (data: RecipeFormData) => {
+    try {
+      if (selectedRecipe) {
+        const updated = await updateRecipe(selectedRecipe.id, data);
+        setIsEditDialogOpen(false);
+        setSelectedRecipe(updated);
+        toast.success("Recipe updated successfully!");
+      }
+    } catch (error) {
+      toast.error("Failed to update recipe");
     }
   };
 
-  const handleUpdateRating = (rating: number) => {
-    if (selectedRecipe) {
-      updateRecipe(selectedRecipe.id, { rating });
-      setSelectedRecipe({ ...selectedRecipe, rating });
+  const handleDeleteRecipe = async () => {
+    try {
+      if (selectedRecipe) {
+        await deleteRecipe(selectedRecipe.id);
+        setIsDetailDialogOpen(false);
+        setSelectedRecipe(null);
+        toast.success("Recipe deleted successfully!");
+      }
+    } catch (error) {
+      toast.error("Failed to delete recipe");
     }
   };
 
-  const handleUpdateImage = (image: string) => {
-    if (selectedRecipe) {
-      updateRecipe(selectedRecipe.id, { image });
-      setSelectedRecipe({ ...selectedRecipe, image });
+  const handleUpdateRating = async (rating: number) => {
+    try {
+      if (selectedRecipe) {
+        const updated = await updateRecipe(selectedRecipe.id, { rating });
+        setSelectedRecipe(updated);
+        toast.success("Rating updated!");
+      }
+    } catch (error) {
+      toast.error("Failed to update rating");
+    }
+  };
+
+  const handleUpdateImage = async (image: string) => {
+    try {
+      if (selectedRecipe) {
+        const updated = await updateRecipe(selectedRecipe.id, { image });
+        setSelectedRecipe(updated);
+        toast.success("Image updated!");
+      }
+    } catch (error) {
+      toast.error("Failed to update image");
     }
   };
 
