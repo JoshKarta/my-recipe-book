@@ -5,7 +5,9 @@ import {
   PlusIcon,
   BookOpenIcon,
   CalendarIcon,
+  Plus,
 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Tab } from "@/lib/types";
@@ -15,12 +17,18 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "boneyard-js/react";
 import Link from "next/link";
+import { CreateTeamModal } from "@/components/create-team-modal";
 
 interface HeaderProps {
   activeTab: Tab;
@@ -30,6 +38,8 @@ interface HeaderProps {
 
 export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
   const router = useRouter();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [createTeamOpen, setCreateTeamOpen] = useState(false);
   const {
     data: session,
     isPending, //loading state
@@ -83,7 +93,7 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
             </Button>
           )}
           <Skeleton name="profile-dropdown" loading={isPending}>
-            <DropdownMenu>
+            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">{session?.user?.name}</Button>
               </DropdownMenuTrigger>
@@ -91,12 +101,29 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
                 <DropdownMenuGroup>
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuItem>Profile</DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Teams</DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          aria-label="create-team"
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            setCreateTeamOpen(true);
+                          }}
+                        >
+                          Create Team <Plus className="size-3 ml-1" />
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
                   <DropdownMenuItem
                     onClick={async () => {
                       await authClient.signOut({
                         fetchOptions: {
                           onSuccess: () => {
-                            router.push("/signin"); // redirect to login page
+                            router.push("/signin");
                           },
                         },
                       });
@@ -108,6 +135,10 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           </Skeleton>
+          <CreateTeamModal
+            open={createTeamOpen}
+            onOpenChange={setCreateTeamOpen}
+          />
         </div>
       </div>
     </header>
