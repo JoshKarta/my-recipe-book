@@ -8,7 +8,7 @@ import {
   Plus,
   UsersIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Tab } from "@/lib/types";
@@ -31,6 +31,9 @@ import { Skeleton } from "boneyard-js/react";
 import Link from "next/link";
 import { CreateTeamModal } from "@/components/create-team-modal";
 import { NotificationsDropdown } from "@/components/notifications-dropdown";
+import { TeamDetailDialog } from "@/components/team-detail-dialog";
+import { toast } from "sonner";
+import { Organization } from "better-auth/plugins";
 
 interface HeaderProps {
   activeTab: Tab;
@@ -42,10 +45,51 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [createTeamOpen, setCreateTeamOpen] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [teamDialogOpen, setTeamDialogOpen] = useState(false);
+  const [orgs, setOrgs] = useState<Array<{ id: string; name: string }>>([]);
+
   const {
     data: session,
     isPending, //loading state
   } = authClient.useSession();
+
+  const { data: organizations } = authClient.useListOrganizations();
+
+  const setActiveOrg = async (org: Organization) => {
+    try {
+      const { data, error } = await authClient.organization.setActive({
+        organizationId: org.id,
+        organizationSlug: org.slug,
+      });
+
+      if (error) {
+        toast.error(error.message ?? "Failed to set active team");
+      }
+
+      toast.success(data?.name + " is the active team");
+    } catch (error) {
+      toast.error("Something went wrong");
+    }
+  };
+
+  // Load orgs list once the session is ready
+  useEffect(() => {
+    if (!session) return;
+    async function load() {
+      const { data } =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (authClient.organization as any).listOrganizations();
+      if (data)
+        setOrgs(
+          (data as Array<{ id: string; name: string }>).map((o) => ({
+            id: o.id,
+            name: o.name,
+          })),
+        );
+    }
+    void load();
+  }, [session]);
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
@@ -114,7 +158,30 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>Teams</DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
-                      <DropdownMenuSubContent>
+                      <DropdownMenuSubContent className="min-w-[180px]">
+                        {organizations?.length === 0 ? (
+                          <DropdownMenuItem
+                            disabled
+                            className="text-muted-foreground text-xs"
+                          >
+                            No teams yet
+                          </DropdownMenuItem>
+                        ) : (
+                          organizations?.map((org) => (
+                            <DropdownMenuItem
+                              key={org.id}
+                              onClick={() => {
+                                setDropdownOpen(false);
+                                setActiveOrg(org);
+                                // setSelectedTeamId(org.id);
+                                // setTeamDialogOpen(true);
+                              }}
+                            >
+                              <UsersIcon className="size-3.5 mr-2 text-muted-foreground" />
+                              {org.name}
+                            </DropdownMenuItem>
+                          ))
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           aria-label="create-team"
@@ -148,6 +215,11 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
           <CreateTeamModal
             open={createTeamOpen}
             onOpenChange={setCreateTeamOpen}
+          />
+          <TeamDetailDialog
+            orgId={selectedTeamId}
+            open={teamDialogOpen}
+            onOpenChange={setTeamDialogOpen}
           />
         </div>
       </div>
