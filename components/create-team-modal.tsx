@@ -171,6 +171,10 @@ export function CreateTeamModal({ open, onOpenChange }: CreateTeamModalProps) {
             {/* Invite members */}
             <div className="space-y-2">
               <FormLabel>Invite Members</FormLabel>
+              <p className="text-xs text-muted-foreground">
+                Invitees will receive an in-app notification to accept. They
+                must already have an account.
+              </p>
               <div className="flex gap-2">
                 <Input
                   type="email"

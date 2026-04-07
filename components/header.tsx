@@ -6,6 +6,7 @@ import {
   BookOpenIcon,
   CalendarIcon,
   Plus,
+  UsersIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import { useRouter } from "next/navigation";
 import { Skeleton } from "boneyard-js/react";
 import Link from "next/link";
 import { CreateTeamModal } from "@/components/create-team-modal";
+import { NotificationsDropdown } from "@/components/notifications-dropdown";
 
 interface HeaderProps {
   activeTab: Tab;
@@ -83,15 +85,23 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
               <CalendarIcon className="size-4" />
               Planner
             </button>
+            <Link
+              href="/teams"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ease-out text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <UsersIcon className="size-4" />
+              <span className="hidden md:block">Teams</span>
+            </Link>
           </nav>
         </div>
-        <div className="flex gap-2 justify-center">
+        <div className="flex gap-2 justify-center items-center">
           {activeTab === "recipes" && (
             <Button onClick={onAddRecipe}>
               <PlusIcon />
               <span className="hidden md:block">Add Recipe</span>
             </Button>
           )}
+          <NotificationsDropdown />
           <Skeleton name="profile-dropdown" loading={isPending}>
             <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger asChild>
