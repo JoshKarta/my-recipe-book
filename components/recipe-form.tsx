@@ -1,59 +1,55 @@
-'use client'
+"use client";
 
-import { useCallback, useRef, useState } from 'react'
-import { ImageIcon, XIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field'
-import { StarRating } from '@/components/star-rating'
-import type { Recipe, RecipeFormData } from '@/lib/types'
+import { useCallback, useRef, useState } from "react";
+import { ImageIcon, XIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { StarRating } from "@/components/star-rating";
+import type { Recipe, RecipeFormData } from "@/lib/types";
 
 interface RecipeFormProps {
-  recipe?: Recipe
-  onSubmit: (data: RecipeFormData) => void
-  onCancel: () => void
+  recipe?: Recipe;
+  onSubmit: (data: RecipeFormData) => void;
+  onCancel: () => void;
 }
 
 export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
-  const [title, setTitle] = useState(recipe?.title || '')
-  const [description, setDescription] = useState(recipe?.description || '')
-  const [ingredients, setIngredients] = useState(recipe?.ingredients || '')
-  const [instructions, setInstructions] = useState(recipe?.instructions || '')
-  const [cookingTime, setCookingTime] = useState(recipe?.cookingTime || '')
-  const [servings, setServings] = useState(recipe?.servings || '')
-  const [rating, setRating] = useState(recipe?.rating || 0)
-  const [image, setImage] = useState<string | null>(recipe?.image || null)
+  const [title, setTitle] = useState(recipe?.title || "");
+  const [description, setDescription] = useState(recipe?.description || "");
+  const [ingredients, setIngredients] = useState(recipe?.ingredients || "");
+  const [instructions, setInstructions] = useState(recipe?.instructions || "");
+  const [cookingTime, setCookingTime] = useState(recipe?.cookingTime || "");
+  const [servings, setServings] = useState(recipe?.servings || "");
+  const [rating, setRating] = useState(recipe?.rating || 0);
+  const [image, setImage] = useState<string | null>(recipe?.image || null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
+      const file = e.target.files?.[0];
       if (file) {
-        const reader = new FileReader()
+        const reader = new FileReader();
         reader.onloadend = () => {
-          setImage(reader.result as string)
-        }
-        reader.readAsDataURL(file)
+          setImage(reader.result as string);
+        };
+        reader.readAsDataURL(file);
       }
     },
-    []
-  )
+    [],
+  );
 
   const handleRemoveImage = useCallback(() => {
-    setImage(null)
+    setImage(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+      fileInputRef.current.value = "";
     }
-  }, [])
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     onSubmit({
       title,
       description,
@@ -63,14 +59,16 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
       servings,
       rating,
       image,
-    })
-  }
+    });
+  };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="title">Recipe Title</FieldLabel>
+          <FieldLabel htmlFor="title">
+            Recipe Title <span className="text-destructive">*</span>
+          </FieldLabel>
           <Input
             id="title"
             value={title}
@@ -114,7 +112,9 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
         </div>
 
         <Field>
-          <FieldLabel htmlFor="ingredients">Ingredients</FieldLabel>
+          <FieldLabel htmlFor="ingredients">
+            Ingredients <span className="text-destructive">*</span>
+          </FieldLabel>
           <Textarea
             id="ingredients"
             value={ingredients}
@@ -125,7 +125,9 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="instructions">Instructions</FieldLabel>
+          <FieldLabel htmlFor="instructions">
+            Instructions <span className="text-destructive">*</span>
+          </FieldLabel>
           <Textarea
             id="instructions"
             value={instructions}
@@ -186,8 +188,8 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit">{recipe ? 'Save Changes' : 'Add Recipe'}</Button>
+        <Button type="submit">{recipe ? "Save Changes" : "Add Recipe"}</Button>
       </div>
     </form>
-  )
+  );
 }
