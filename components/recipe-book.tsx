@@ -25,12 +25,15 @@ import { RecipeForm } from "@/components/recipe-form";
 import { RecipeDetail } from "@/components/recipe-detail";
 import { WeeklyPlanner } from "@/components/weekly-planner";
 import { useRecipes } from "@/hooks/use-recipes";
+import { authClient } from "@/lib/auth-client";
 import type { Recipe, RecipeFormData, Tab } from "@/lib/types";
 import ActiveOrganizationAlert from "./active-organization-alert";
 
 export default function RecipeBook() {
+  const { data: activeOrganization } = authClient.useActiveOrganization();
+
   const { recipes, isLoaded, addRecipe, updateRecipe, deleteRecipe } =
-    useRecipes();
+    useRecipes({ organizationId: activeOrganization?.id ?? null });
   const [activeTab, setActiveTab] = useState<Tab>("recipes");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -48,7 +51,10 @@ export default function RecipeBook() {
 
   const handleAddRecipe = async (data: RecipeFormData) => {
     try {
-      await addRecipe(data);
+      await addRecipe({
+        ...data,
+        organizationId: activeOrganization?.id ?? null,
+      });
       setIsAddDialogOpen(false);
       toast.success("Recipe added successfully!");
     } catch (error) {
@@ -165,10 +171,15 @@ export default function RecipeBook() {
                   <EmptyMedia variant="icon">
                     <BookOpenIcon />
                   </EmptyMedia>
-                  <EmptyTitle>No recipes yet</EmptyTitle>
+                  <EmptyTitle>
+                    {activeOrganization
+                      ? `No recipes in ${activeOrganization.name} yet`
+                      : "No recipes yet"}
+                  </EmptyTitle>
                   <EmptyDescription>
-                    Start building your recipe collection by adding your first
-                    recipe.
+                    {activeOrganization
+                      ? `Be the first to add a recipe to ${activeOrganization.name}.`
+                      : "Start building your recipe collection by adding your first recipe."}
                   </EmptyDescription>
                 </EmptyHeader>
                 <Button onClick={() => setIsAddDialogOpen(true)}>

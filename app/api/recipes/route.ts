@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db/drizzle";
 import { member, recipe, recipeImage } from "@/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -25,10 +25,7 @@ async function getVisibleRecipes(userId: string, orgIds: string[]) {
           .select()
           .from(recipe)
           .where(inArray(recipe.organizationId, orgIds))
-      : await db
-          .select()
-          .from(recipe)
-          .where(eq(recipe.createdById, userId));
+      : await db.select().from(recipe).where(eq(recipe.createdById, userId));
 
   if (rows.length === 0) return [];
 
@@ -51,11 +48,37 @@ async function getVisibleRecipes(userId: string, orgIds: string[]) {
 }
 
 // ─── GET /api/recipes ─────────────────────────────────────────────────────────
+// Optional ?organizationId= to filter to a specific org.
+// Without it, returns all recipes visible to the user across every org they belong to.
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const filterOrgId = searchParams.get("organizationId");
+
+  if (filterOrgId) {
+    // Verify the user is actually a member of the requested org
+    const membership = await db
+      .select({ id: member.id })
+      .from(member)
+      .where(
+        and(
+          eq(member.organizationId, filterOrgId),
+          eq(member.userId, session.user.id),
+        ),
+      )
+      .limit(1);
+
+    if (membership.length === 0) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const recipes = await getVisibleRecipes(session.user.id, [filterOrgId]);
+    return NextResponse.json(recipes);
   }
 
   const orgIds = await getUserOrgIds(session.user.id);

@@ -3,18 +3,28 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Recipe, RecipeFormData } from "@/lib/types";
 
-export function useRecipes() {
+interface UseRecipesOptions {
+  /** When set, only recipes belonging to this org are returned. */
+  organizationId?: string | null;
+}
+
+export function useRecipes({ organizationId }: UseRecipesOptions = {}) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load all visible recipes on mount
+  // Re-fetch whenever the active org filter changes
   useEffect(() => {
-    fetch("/api/recipes")
+    setIsLoaded(false);
+    const url = organizationId
+      ? `/api/recipes?organizationId=${encodeURIComponent(organizationId)}`
+      : "/api/recipes";
+
+    fetch(url)
       .then((res) => (res.ok ? res.json() : []))
       .then((data: Recipe[]) => setRecipes(data))
       .catch(() => setRecipes([]))
       .finally(() => setIsLoaded(true));
-  }, []);
+  }, [organizationId]);
 
   const addRecipe = useCallback(
     async (data: RecipeFormData): Promise<Recipe> => {
