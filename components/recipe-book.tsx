@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpenIcon, SearchIcon } from "lucide-react";
+import { BookOpenIcon, Loader2Icon, SearchIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -37,8 +37,6 @@ export default function RecipeBook() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
-
-  console.log(recipes);
 
   const filteredRecipes = recipes.filter(
     (recipe) =>
@@ -127,7 +125,9 @@ export default function RecipeBook() {
           onAddRecipe={() => setIsAddDialogOpen(true)}
         />
         <main className="flex flex-1 items-center justify-center">
-          <div className="text-muted-foreground">Loading...</div>
+          <div className="text-muted-foreground">
+            <Loader2Icon className="size-8 animate-spin text-muted-foreground" />
+          </div>
         </main>
       </div>
     );
