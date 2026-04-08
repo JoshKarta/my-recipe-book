@@ -9,7 +9,7 @@ import {
   UsersIcon,
   CheckIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Tab } from "@/lib/types";
@@ -98,7 +98,7 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
               )}
             >
               <BookOpenIcon className="size-4" />
-              Recipes
+              <span className="hidden md:block">Recipes</span>
             </button>
             <button
               onClick={() => onTabChange("planner")}
@@ -110,7 +110,7 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
               )}
             >
               <CalendarIcon className="size-4" />
-              Planner
+              <span className="hidden md:block">Planner</span>
             </button>
             <Link
               href="/teams"
