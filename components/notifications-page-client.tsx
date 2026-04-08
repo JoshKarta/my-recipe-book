@@ -1,6 +1,13 @@
 "use client";
 
-import { BellIcon, CheckCheckIcon, Loader2Icon, XIcon, CheckIcon } from "lucide-react";
+import {
+  BellIcon,
+  CheckCheckIcon,
+  Loader2Icon,
+  XIcon,
+  CheckIcon,
+  ChevronLeftIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -12,6 +19,7 @@ import {
   useNotifications,
   type AppNotification,
 } from "@/components/notifications-dropdown";
+import { useRouter } from "next/navigation";
 
 interface InviteData {
   invitationId: string;
@@ -35,8 +43,12 @@ function InviteActions({
     const { error } = await authClient.organization.acceptInvitation({
       invitationId: parsed.invitationId,
     });
-    if (error) { toast.error(error.message ?? "Failed to accept"); }
-    else { toast.success(`Joined ${parsed.organizationName}!`); onDone(); }
+    if (error) {
+      toast.error(error.message ?? "Failed to accept");
+    } else {
+      toast.success(`Joined ${parsed.organizationName}!`);
+      onDone();
+    }
     setBusy(null);
   }
 
@@ -45,26 +57,43 @@ function InviteActions({
     const { error } = await authClient.organization.rejectInvitation({
       invitationId: parsed.invitationId,
     });
-    if (error) { toast.error(error.message ?? "Failed to decline"); }
-    else { toast.info("Invitation declined."); onDone(); }
+    if (error) {
+      toast.error(error.message ?? "Failed to decline");
+    } else {
+      toast.info("Invitation declined.");
+      onDone();
+    }
     setBusy(null);
   }
 
   return (
     <div className="flex gap-2 mt-3">
       <Button size="sm" onClick={accept} disabled={!!busy}>
-        {busy === "accept" ? <Loader2Icon className="size-3.5 mr-1 animate-spin" /> : <CheckIcon className="size-3.5 mr-1" />}
+        {busy === "accept" ? (
+          <Loader2Icon className="size-3.5 mr-1 animate-spin" />
+        ) : (
+          <CheckIcon className="size-3.5 mr-1" />
+        )}
         Accept
       </Button>
       <Button size="sm" variant="outline" onClick={decline} disabled={!!busy}>
-        {busy === "decline" ? <Loader2Icon className="size-3.5 mr-1 animate-spin" /> : <XIcon className="size-3.5 mr-1" />}
+        {busy === "decline" ? (
+          <Loader2Icon className="size-3.5 mr-1 animate-spin" />
+        ) : (
+          <XIcon className="size-3.5 mr-1" />
+        )}
         Decline
       </Button>
     </div>
   );
 }
 
-function NotifRow({ notif, onMarkRead, onDismiss, onRefresh }: {
+function NotifRow({
+  notif,
+  onMarkRead,
+  onDismiss,
+  onRefresh,
+}: {
   notif: AppNotification;
   onMarkRead: (id: string) => void;
   onDismiss: (id: string) => void;
@@ -73,7 +102,12 @@ function NotifRow({ notif, onMarkRead, onDismiss, onRefresh }: {
   const isInvite = notif.type === "team_invitation";
 
   return (
-    <div className={cn("rounded-lg border p-4 relative group", !notif.read && "bg-primary/5 border-primary/20")}>
+    <div
+      className={cn(
+        "rounded-lg border p-4 relative group",
+        !notif.read && "bg-primary/5 border-primary/20",
+      )}
+    >
       <button
         onClick={() => onDismiss(notif.id)}
         className="absolute top-3 right-3 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
@@ -82,19 +116,31 @@ function NotifRow({ notif, onMarkRead, onDismiss, onRefresh }: {
         <XIcon className="size-4" />
       </button>
       <div className="flex items-start gap-3 pr-8">
-        {!notif.read && <span className="mt-2 size-2 rounded-full bg-primary shrink-0" />}
+        {!notif.read && (
+          <span className="mt-2 size-2 rounded-full bg-primary shrink-0" />
+        )}
         <div className={cn("flex-1 min-w-0", notif.read && "pl-5")}>
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-medium text-sm">{notif.title}</p>
             {!notif.read && <Badge className="text-[10px]">New</Badge>}
-            {isInvite && <Badge variant="secondary" className="text-[10px]">Invitation</Badge>}
+            {isInvite && (
+              <Badge variant="secondary" className="text-[10px]">
+                Invitation
+              </Badge>
+            )}
           </div>
           <p className="text-sm text-muted-foreground mt-1">{notif.message}</p>
           <p className="text-xs text-muted-foreground/60 mt-1">
             {new Date(notif.createdAt).toLocaleString()}
           </p>
           {isInvite && (
-            <InviteActions notif={notif} onDone={() => { onDismiss(notif.id); onRefresh(); }} />
+            <InviteActions
+              notif={notif}
+              onDone={() => {
+                onDismiss(notif.id);
+                onRefresh();
+              }}
+            />
           )}
           {!notif.read && !isInvite && (
             <button
@@ -111,11 +157,17 @@ function NotifRow({ notif, onMarkRead, onDismiss, onRefresh }: {
 }
 
 export function NotificationsPageClient() {
-  const { notifications, loading, refresh, markRead, dismiss } = useNotifications();
+  const router = useRouter();
+  const { notifications, loading, refresh, markRead, dismiss } =
+    useNotifications();
   const unread = notifications.filter((n) => !n.read);
 
   async function markAllRead() {
-    await Promise.all(unread.map((n) => fetch(`/api/notifications/${n.id}`, { method: "PATCH" })));
+    await Promise.all(
+      unread.map((n) =>
+        fetch(`/api/notifications/${n.id}`, { method: "PATCH" }),
+      ),
+    );
     refresh();
   }
 
@@ -127,14 +179,26 @@ export function NotificationsPageClient() {
             <BellIcon className="size-6" /> Notifications
           </h1>
           {unread.length > 0 && (
-            <p className="text-sm text-muted-foreground mt-1">{unread.length} unread</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {unread.length} unread
+            </p>
           )}
         </div>
-        {unread.length > 0 && (
-          <Button variant="outline" size="sm" onClick={markAllRead}>
-            <CheckCheckIcon className="size-4 mr-1.5" /> Mark all read
+
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => router.back()}
+            size={"icon"}
+            variant={"secondary"}
+          >
+            <ChevronLeftIcon className="size-4" />
           </Button>
-        )}
+          {unread.length > 0 && (
+            <Button variant="outline" size="sm" onClick={markAllRead}>
+              <CheckCheckIcon className="size-4 mr-1.5" /> Mark all read
+            </Button>
+          )}
+        </div>
       </div>
 
       <Separator />
@@ -152,7 +216,13 @@ export function NotificationsPageClient() {
       ) : (
         <div className="space-y-3">
           {notifications.map((n) => (
-            <NotifRow key={n.id} notif={n} onMarkRead={markRead} onDismiss={dismiss} onRefresh={refresh} />
+            <NotifRow
+              key={n.id}
+              notif={n}
+              onMarkRead={markRead}
+              onDismiss={dismiss}
+              onRefresh={refresh}
+            />
           ))}
         </div>
       )}
