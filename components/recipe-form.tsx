@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { StarRating } from "@/components/star-rating";
 import type { Recipe, RecipeFormData } from "@/lib/types";
+import { authClient } from "@/lib/auth-client";
 
 interface RecipeFormProps {
   recipe?: Recipe;
@@ -24,6 +25,8 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
   const [servings, setServings] = useState(recipe?.servings || "");
   const [rating, setRating] = useState(recipe?.rating || 0);
   const [image, setImage] = useState<string | null>(recipe?.image || null);
+
+  const { data: activeOrganization } = authClient.useActiveOrganization();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,6 +62,7 @@ export function RecipeForm({ recipe, onSubmit, onCancel }: RecipeFormProps) {
       servings,
       rating,
       image,
+      organizationId: activeOrganization?.id,
     });
   };
 
