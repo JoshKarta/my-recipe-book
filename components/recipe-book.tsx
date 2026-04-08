@@ -26,6 +26,7 @@ import { RecipeDetail } from "@/components/recipe-detail";
 import { WeeklyPlanner } from "@/components/weekly-planner";
 import { useRecipes } from "@/hooks/use-recipes";
 import type { Recipe, RecipeFormData, Tab } from "@/lib/types";
+import ActiveOrganizationAlert from "./active-organization-alert";
 
 export default function RecipeBook() {
   const { recipes, isLoaded, addRecipe, updateRecipe, deleteRecipe } =
@@ -141,6 +142,8 @@ export default function RecipeBook() {
       />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+        <ActiveOrganizationAlert />
+
         {activeTab === "recipes" ? (
           <>
             {recipes.length > 0 && (

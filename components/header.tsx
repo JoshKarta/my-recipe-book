@@ -7,6 +7,7 @@ import {
   CalendarIcon,
   Plus,
   UsersIcon,
+  CheckIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,6 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
   const [createTeamOpen, setCreateTeamOpen] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
-  const [orgs, setOrgs] = useState<Array<{ id: string; name: string }>>([]);
 
   const {
     data: session,
@@ -55,6 +55,7 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
   } = authClient.useSession();
 
   const { data: organizations } = authClient.useListOrganizations();
+  const { data: activeOrganization } = authClient.useActiveOrganization();
 
   const setActiveOrg = async (org: Organization) => {
     try {
@@ -72,24 +73,6 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
       toast.error("Something went wrong");
     }
   };
-
-  // Load orgs list once the session is ready
-  useEffect(() => {
-    if (!session) return;
-    async function load() {
-      const { data } =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (authClient.organization as any).listOrganizations();
-      if (data)
-        setOrgs(
-          (data as Array<{ id: string; name: string }>).map((o) => ({
-            id: o.id,
-            name: o.name,
-          })),
-        );
-    }
-    void load();
-  }, [session]);
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
@@ -170,15 +153,19 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
                           organizations?.map((org) => (
                             <DropdownMenuItem
                               key={org.id}
+                              id={org.id}
                               onClick={() => {
-                                setDropdownOpen(false);
+                                // setDropdownOpen(false);
+                                setSelectedTeamId(org.id);
                                 setActiveOrg(org);
-                                // setSelectedTeamId(org.id);
                                 // setTeamDialogOpen(true);
                               }}
                             >
                               <UsersIcon className="size-3.5 mr-2 text-muted-foreground" />
                               {org.name}
+                              {activeOrganization?.id === org?.id ? (
+                                <CheckIcon className="size-3 text-green-500" />
+                              ) : null}
                             </DropdownMenuItem>
                           ))
                         )}
@@ -190,7 +177,8 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
                             setCreateTeamOpen(true);
                           }}
                         >
-                          Create Team <Plus className="size-3 ml-1" />
+                          <Plus className="size-3 ml-1" />
+                          Create Team
                         </DropdownMenuItem>
                       </DropdownMenuSubContent>
                     </DropdownMenuPortal>
