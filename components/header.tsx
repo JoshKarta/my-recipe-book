@@ -123,7 +123,7 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
         </div>
         <div className="flex gap-2 justify-center items-center">
           {activeTab === "recipes" && (
-            <Button onClick={onAddRecipe}>
+            <Button onClick={onAddRecipe} className="hidden md:flex">
               <PlusIcon />
               <span className="hidden md:block">Add Recipe</span>
             </Button>
@@ -136,7 +136,12 @@ export function Header({ activeTab, onTabChange, onAddRecipe }: HeaderProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <div>
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuLabel className="pt-0 text-neutral-500 font-light text-xs">
+                      {session?.user?.email}
+                    </DropdownMenuLabel>
+                  </div>
                   <DropdownMenuItem>Profile</DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>Teams</DropdownMenuSubTrigger>

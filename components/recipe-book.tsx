@@ -152,6 +152,12 @@ export default function RecipeBook() {
 
         {activeTab === "recipes" ? (
           <>
+            <Button
+              onClick={() => setIsAddDialogOpen(!isAddDialogOpen)}
+              className="w-full mb-4 md:hidden"
+            >
+              Add Recipe
+            </Button>
             {recipes.length > 0 && (
               <div className="relative mb-6">
                 <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
