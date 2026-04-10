@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db/drizzle";
-import { member, recipe, recipeImage } from "@/db/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { member, organization, recipe, recipeImage } from "@/db/schema";
+import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -16,24 +16,43 @@ async function getUserOrgIds(userId: string): Promise<string[]> {
   return memberships.map((m) => m.organizationId);
 }
 
-/** Fetch recipes (with images) that are visible to the user. */
+/** Fetch recipes (with images + org name) that are visible to the user. */
 async function getVisibleRecipes(userId: string, orgIds: string[]) {
-  // Fetch all recipes that belong to any of the user's orgs
-  const rows =
-    orgIds.length > 0
-      ? await db
-          .select()
-          .from(recipe)
-          .where(inArray(recipe.organizationId, orgIds))
-      : await db.select().from(recipe).where(eq(recipe.createdById, userId));
+  // Always include the user's personal recipes (organizationId IS NULL) plus
+  // every recipe that belongs to one of their orgs.
+  const rows = await db
+    .select()
+    .from(recipe)
+    .where(
+      or(
+        // Org-scoped recipes the user can see
+        orgIds.length > 0 ? inArray(recipe.organizationId, orgIds) : undefined,
+        // Personal recipes created by this user
+        and(eq(recipe.createdById, userId), isNull(recipe.organizationId)),
+      ),
+    );
 
   if (rows.length === 0) return [];
 
   const recipeIds = rows.map((r) => r.id);
-  const images = await db
-    .select()
-    .from(recipeImage)
-    .where(inArray(recipeImage.recipeId, recipeIds));
+  const uniqueOrgIds = [
+    ...new Set(rows.map((r) => r.organizationId).filter(Boolean) as string[]),
+  ];
+
+  const [images, orgs] = await Promise.all([
+    db
+      .select()
+      .from(recipeImage)
+      .where(inArray(recipeImage.recipeId, recipeIds)),
+    uniqueOrgIds.length > 0
+      ? db
+          .select({ id: organization.id, name: organization.name })
+          .from(organization)
+          .where(inArray(organization.id, uniqueOrgIds))
+      : Promise.resolve([] as { id: string; name: string }[]),
+  ]);
+
+  const orgNameMap = Object.fromEntries(orgs.map((o) => [o.id, o.name]));
 
   return rows.map((r) => {
     const imgs = images
@@ -43,6 +62,9 @@ async function getVisibleRecipes(userId: string, orgIds: string[]) {
       ...r,
       images: imgs,
       image: imgs[0]?.url ?? null,
+      organizationName: r.organizationId
+        ? (orgNameMap[r.organizationId] ?? null)
+        : null,
     };
   });
 }
@@ -177,6 +199,17 @@ export async function POST(req: NextRequest) {
     createdAt: now.toISOString(),
   }));
 
+  // Resolve org name for the response
+  let organizationName: string | null = null;
+  if (organizationId) {
+    const [org] = await db
+      .select({ name: organization.name })
+      .from(organization)
+      .where(eq(organization.id, organizationId))
+      .limit(1);
+    organizationName = org?.name ?? null;
+  }
+
   return NextResponse.json(
     {
       id,
@@ -189,6 +222,7 @@ export async function POST(req: NextRequest) {
       rating,
       createdById: session.user.id,
       organizationId,
+      organizationName,
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
       images: imgs,

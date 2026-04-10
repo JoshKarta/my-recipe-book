@@ -21,6 +21,8 @@ export interface Recipe {
   images: RecipeImage[];
   createdById: string;
   organizationId: string | null;
+  /** Resolved display name of the organisation – included by the API via a join */
+  organizationName: string | null;
   createdAt: string;
   updatedAt: string;
 }

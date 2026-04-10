@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useRef, useState } from 'react'
+import { useRef, useState } from "react";
 import {
   CameraIcon,
   ClockIcon,
@@ -8,8 +8,17 @@ import {
   PencilIcon,
   TrashIcon,
   UsersIcon,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,16 +28,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { StarRating } from '@/components/star-rating'
-import type { Recipe } from '@/lib/types'
+} from "@/components/ui/alert-dialog";
+import { StarRating } from "@/components/star-rating";
+import { authClient } from "@/lib/auth-client";
+import type { Recipe } from "@/lib/types";
 
 interface RecipeDetailProps {
-  recipe: Recipe
-  onEdit: () => void
-  onDelete: () => void
-  onUpdateRating: (rating: number) => void
-  onUpdateImage: (image: string) => void
+  recipe: Recipe;
+  onEdit: () => void;
+  onDelete: () => void;
+  onUpdateRating: (rating: number) => void;
+  onUpdateImage: (image: string) => void;
+  onUpdateOrganization: (organizationId: string | null) => Promise<void>;
 }
 
 export function RecipeDetail({
@@ -37,20 +48,36 @@ export function RecipeDetail({
   onDelete,
   onUpdateRating,
   onUpdateImage,
+  onUpdateOrganization,
 }: RecipeDetailProps) {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: session } = authClient.useSession();
+  const { data: organizations } = authClient.useListOrganizations();
+
+  const isCreator = session?.user.id === recipe.createdById;
+
+  const handleOrgChange = async (value: string) => {
+    setIsAssigning(true);
+    try {
+      await onUpdateOrganization(value === "__none__" ? null : value);
+    } finally {
+      setIsAssigning(false);
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onloadend = () => {
-        onUpdateImage(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+        onUpdateImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -74,7 +101,7 @@ export function RecipeDetail({
           onClick={() => fileInputRef.current?.click()}
         >
           <CameraIcon />
-          {recipe.image ? 'Change Photo' : 'Add Photo'}
+          {recipe.image ? "Change Photo" : "Add Photo"}
         </Button>
         <input
           ref={fileInputRef}
@@ -87,7 +114,9 @@ export function RecipeDetail({
 
       <div className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-4">
-          <h2 className="text-2xl font-semibold text-balance">{recipe.title}</h2>
+          <h2 className="text-2xl font-semibold text-balance">
+            {recipe.title}
+          </h2>
           <div className="flex shrink-0 gap-2">
             <Button size="icon" variant="outline" onClick={onEdit}>
               <PencilIcon />
@@ -130,6 +159,44 @@ export function RecipeDetail({
         {recipe.description && (
           <p className="text-muted-foreground">{recipe.description}</p>
         )}
+
+        {/* ── Organisation assignment ─────────────────────────────── */}
+        <div className="flex flex-col gap-2">
+          <h3 className="text-lg font-medium">Team</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            {isAssigning && <Spinner />}
+            {recipe.organizationName && (
+              <Badge variant="default" className="gap-1">
+                <UsersIcon className="size-3" />
+                {recipe.organizationName}
+              </Badge>
+            )}
+
+            {isCreator && (
+              <Select
+                value={recipe.organizationId ?? "__none__"}
+                onValueChange={handleOrgChange}
+                disabled={isAssigning}
+              >
+                <SelectTrigger className="h-7 w-auto gap-1 border-dashed text-xs">
+                  <SelectValue
+                    placeholder={
+                      recipe.organizationName ? "Move to…" : "Add to team…"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No team (personal)</SelectItem>
+                  {organizations?.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
       </div>
 
       {recipe.ingredients && (
@@ -155,8 +222,8 @@ export function RecipeDetail({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Recipe</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &quot;{recipe.title}&quot;? This action
-              cannot be undone.
+              Are you sure you want to delete &quot;{recipe.title}&quot;? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -166,5 +233,5 @@ export function RecipeDetail({
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

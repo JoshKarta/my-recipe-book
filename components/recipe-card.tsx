@@ -1,19 +1,20 @@
-'use client'
+"use client";
 
-import { ClockIcon, ImageIcon, UsersIcon } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { StarRating } from '@/components/star-rating'
-import type { Recipe } from '@/lib/types'
+import { ClockIcon, ImageIcon, UsersIcon } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { StarRating } from "@/components/star-rating";
+import type { Recipe } from "@/lib/types";
 
 interface RecipeCardProps {
-  recipe: Recipe
-  onClick: () => void
+  recipe: Recipe;
+  onClick: () => void;
 }
 
 export function RecipeCard({ recipe, onClick }: RecipeCardProps) {
   return (
     <Card
-      className="cursor-pointer overflow-hidden pt-0 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg h-full"
+      className="cursor-pointer overflow-hidden pt-0 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg h-full group"
       onClick={onClick}
     >
       <div className="relative aspect-4/3 w-full overflow-hidden bg-muted">
@@ -21,7 +22,7 @@ export function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           <img
             src={recipe.image}
             alt={recipe.title}
-            className="size-full object-cover transition-transform duration-300 ease-out hover:scale-105"
+            className="size-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
           />
         ) : (
           <div className="flex size-full items-center justify-center">
@@ -35,7 +36,7 @@ export function RecipeCard({ recipe, onClick }: RecipeCardProps) {
       </CardHeader>
       <CardContent className="pt-0">
         <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
-          {recipe.description || 'No description'}
+          {recipe.description || "No description"}
         </p>
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           {recipe.cookingTime && (
@@ -51,7 +52,15 @@ export function RecipeCard({ recipe, onClick }: RecipeCardProps) {
             </span>
           )}
         </div>
+        {recipe.organizationName && (
+          <div className="mt-3">
+            <Badge variant="default" className="gap-1 text-xs">
+              <UsersIcon className="size-3" />
+              {recipe.organizationName}
+            </Badge>
+          </div>
+        )}
       </CardContent>
     </Card>
-  )
+  );
 }

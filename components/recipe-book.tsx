@@ -112,6 +112,22 @@ export default function RecipeBook() {
     }
   };
 
+  const handleUpdateOrganization = async (organizationId: string | null) => {
+    try {
+      if (selectedRecipe) {
+        const updated = await updateRecipe(selectedRecipe.id, {
+          organizationId,
+        });
+        setSelectedRecipe(updated);
+        toast.success(
+          organizationId ? "Recipe added to team!" : "Recipe moved to personal",
+        );
+      }
+    } catch (error) {
+      toast.error("Failed to update team");
+    }
+  };
+
   const handleRecipeClick = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
     setIsDetailDialogOpen(true);
@@ -281,6 +297,7 @@ export default function RecipeBook() {
               onDelete={handleDeleteRecipe}
               onUpdateRating={handleUpdateRating}
               onUpdateImage={handleUpdateImage}
+              onUpdateOrganization={handleUpdateOrganization}
             />
           )}
         </DialogContent>
