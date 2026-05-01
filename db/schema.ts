@@ -18,7 +18,7 @@ export const user = pgTable("user", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -30,7 +30,7 @@ export const session = pgTable(
     token: text("token").notNull().unique(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
@@ -61,7 +61,7 @@ export const account = pgTable(
     password: text("password"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
@@ -77,7 +77,7 @@ export const verification = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
@@ -93,32 +93,14 @@ export const notification = pgTable(
     type: text("type").notNull(),
     title: text("title").notNull(),
     message: text("message").notNull(),
-    data: text("data"), // JSON string
+    data: text("data"),
     read: boolean("read").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [index("notification_userId_idx").on(table.userId)],
 );
 
-export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  accounts: many(account),
-  notifications: many(notification),
-}));
-
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
-  }),
-}));
-
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
-  }),
-}));
+// ─── Organization ─────────────────────────────────────────────────────────────
 
 export const organization = pgTable(
   "organization",
@@ -174,6 +156,105 @@ export const invitation = pgTable(
   ],
 );
 
+// ─── Recipes ─────────────────────────────────────────────────────────────────
+
+export const recipe = pgTable(
+  "recipe",
+  {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    description: text("description"),
+    ingredients: text("ingredients").notNull(),
+    instructions: text("instructions").notNull(),
+    cookingTime: text("cooking_time"),
+    servings: text("servings"),
+    rating: integer("rating").default(0).notNull(),
+    createdById: text("created_by_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id").references(() => organization.id, {
+      onDelete: "cascade",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("recipe_createdById_idx").on(table.createdById),
+    index("recipe_organizationId_idx").on(table.organizationId),
+
+    // 🔥 NEW
+    index("recipe_org_createdAt_idx").on(table.organizationId, table.createdAt),
+
+    // 🔥 NEW
+    index("recipe_user_personal_idx").on(
+      table.createdById,
+      table.organizationId,
+    ),
+  ],
+);
+
+export const recipeImage = pgTable(
+  "recipe_image",
+  {
+    id: text("id").primaryKey(),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipe.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    order: integer("order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("recipe_image_recipeId_idx").on(table.recipeId),
+
+    // 🔥 NEW
+    index("recipe_image_recipe_order_idx").on(table.recipeId, table.order),
+  ],
+);
+
+// ─── Meal Plans ───────────────────────────────────────────────────────────────
+
+export const mealPlan = pgTable(
+  "meal_plan",
+  {
+    id: text("id").primaryKey(),
+    date: text("date").notNull(),
+    mealType: text("meal_type").notNull(),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipe.id, { onDelete: "cascade" }),
+    createdById: text("created_by_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id").references(() => organization.id, {
+      onDelete: "cascade",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("meal_plan_createdById_idx").on(table.createdById),
+    index("meal_plan_organizationId_idx").on(table.organizationId),
+
+    // 🔥 NEW
+    index("meal_plan_org_date_idx").on(table.organizationId, table.date),
+
+    uniqueIndex("meal_plan_date_mealType_org_idx").on(
+      table.date,
+      table.mealType,
+      table.organizationId,
+    ),
+  ],
+);
+
+// ─── Relations ────────────────────────────────────────────────────────────────
+
 export const organizationRelations = relations(organization, ({ many }) => ({
   members: many(member),
   invitations: many(invitation),
@@ -208,86 +289,25 @@ export const notificationRelations = relations(notification, ({ one }) => ({
   }),
 }));
 
-// ─── Recipes ─────────────────────────────────────────────────────────────────
+export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
+  accounts: many(account),
+  notifications: many(notification),
+}));
 
-export const recipe = pgTable(
-  "recipe",
-  {
-    id: text("id").primaryKey(),
-    title: text("title").notNull(),
-    description: text("description"),
-    ingredients: text("ingredients").notNull(),
-    instructions: text("instructions").notNull(),
-    cookingTime: text("cooking_time"),
-    servings: text("servings"),
-    rating: integer("rating").default(0).notNull(),
-    createdById: text("created_by_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    organizationId: text("organization_id").references(() => organization.id, {
-      onDelete: "cascade",
-    }),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (table) => [
-    index("recipe_createdById_idx").on(table.createdById),
-    index("recipe_organizationId_idx").on(table.organizationId),
-  ],
-);
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
+}));
 
-export const recipeImage = pgTable(
-  "recipe_image",
-  {
-    id: text("id").primaryKey(),
-    recipeId: text("recipe_id")
-      .notNull()
-      .references(() => recipe.id, { onDelete: "cascade" }),
-    url: text("url").notNull(),
-    order: integer("order").default(0).notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-  },
-  (table) => [index("recipe_image_recipeId_idx").on(table.recipeId)],
-);
-
-// ─── Meal Plans ───────────────────────────────────────────────────────────────
-
-export const mealPlan = pgTable(
-  "meal_plan",
-  {
-    id: text("id").primaryKey(),
-    date: text("date").notNull(), // YYYY-MM-DD
-    mealType: text("meal_type").notNull(), // breakfast | lunch | dinner
-    recipeId: text("recipe_id")
-      .notNull()
-      .references(() => recipe.id, { onDelete: "cascade" }),
-    createdById: text("created_by_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    organizationId: text("organization_id").references(() => organization.id, {
-      onDelete: "cascade",
-    }),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (table) => [
-    index("meal_plan_createdById_idx").on(table.createdById),
-    index("meal_plan_organizationId_idx").on(table.organizationId),
-    uniqueIndex("meal_plan_date_mealType_org_idx").on(
-      table.date,
-      table.mealType,
-      table.organizationId,
-    ),
-  ],
-);
-
-// ─── Relations ────────────────────────────────────────────────────────────────
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
+  }),
+}));
 
 export const recipeRelations = relations(recipe, ({ one, many }) => ({
   createdBy: one(user, {
